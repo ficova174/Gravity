@@ -5,22 +5,23 @@
 #include "viewportErrors.h"
 #include "map.h"
 
+
+void Viewport::setSize(const Map &map, float w, float h) {
+    // Warning : no clamping done !
+    m_viewport.w = w;
+    m_viewport.h = h;
+    
+    if ((m_viewport.w > map.getWidth()) || (m_viewport.h > map.getHeight())) {
+        throw ViewportError("Error: viewport size is bigger than map size");
+    }
+}
+
 void Viewport::setCoordinates(const Map &map, float x, float y) {
     m_viewport.x = x;
     m_viewport.y = y;
 
     m_viewport.x = std::clamp(m_viewport.x, 0.0f, map.getWidth() - m_viewport.w);
     m_viewport.y = std::clamp(m_viewport.y, 0.0f, map.getHeight() - m_viewport.h);
-}
-
-void Viewport::setSize(const Map &map, float w, float h) {
-    // Warning : no clamping done !
-    m_viewport.w = w;
-    m_viewport.h = h;
-
-    if ((m_viewport.w > map.getWidth()) || (m_viewport.h > map.getHeight())) {
-        throw ViewportError("Error: viewport size is bigger than map size");
-    }
 }
 
 void Viewport::zoom(const Map &map, float changex, float changey) {

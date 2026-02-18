@@ -4,7 +4,7 @@
 
 class Map {
 public:
-    ~Map();
+    ~Map() {SDL_DestroyTexture(m_texture);}
 
     float getWidth() const {return m_w;}
     float getHeight() const {return m_h;}

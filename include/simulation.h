@@ -3,6 +3,7 @@
 #include <SDL3/SDL.h>
 #include "map.h"
 #include "viewport.h"
+#include "particle.h"
 
 class Simulation {
 public:
@@ -22,6 +23,7 @@ private:
 
     Map m_map;
     Viewport m_viewport;
+    Particle m_particle;
 
     static constexpr float targetFPS{120.0f};
 

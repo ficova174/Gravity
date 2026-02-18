@@ -3,8 +3,9 @@
 #include "simulationErrors.h"
 #include "map.h"
 #include "viewport.h"
+#include "particle.h"
 
-Simulation::Simulation(const char* appName, const char* creatorName) : m_map(), m_viewport() {
+Simulation::Simulation(const char* appName, const char* creatorName) : m_map(), m_viewport(), m_particle(10.0f) {
     if (!SDL_SetAppMetadata(appName, nullptr, nullptr)) {
         throw SimulationError("Setting up the app metadata failed: ", SDL_GetError());
     }
@@ -26,12 +27,15 @@ Simulation::Simulation(const char* appName, const char* creatorName) : m_map(), 
     }
 
     m_map.setTexture(m_renderer);
+    m_particle.setSharedTexture(m_renderer);
 
     m_viewport.setSize(m_map, screenWidth, screenHeight);
     m_viewport.setCoordinates(m_map, m_map.getWidth() / 2.0f, m_map.getHeight() / 2.0f);
+    m_particle.setCoordinates(m_map, m_map.getWidth() / 2.0f, m_map.getHeight() / 2.0f);
 }
 
 Simulation::~Simulation() {
+    Particle::destroySharedTexture();
     SDL_DestroyRenderer(m_renderer);
     SDL_DestroyWindow(m_window);
     SDL_Quit();
@@ -51,18 +55,15 @@ void Simulation::run() {
         float deltaTime{static_cast<float>(currentCounter - lastCounter) / static_cast<float>(perfFreq)};
         lastCounter = currentCounter;
 
-        // Events handling
         handleEvents(event, running);
 
         if (!running) {
             break;
         }
 
-        // Movement handling
         const bool *keys{SDL_GetKeyboardState(nullptr)};
         handleMovements(keys, deltaTime);
         
-        // Rendering
         render();
 
         float targetFrameTime {1.0f / targetFPS};
@@ -98,12 +99,14 @@ void Simulation::handleMovements(const bool *keys, float deltaTime) {
     SDL_PumpEvents();
 
     m_viewport.move(m_map, keys, deltaTime);
+    m_particle.move(m_map, deltaTime);
 }
 
 void Simulation::render() {
     SDL_RenderClear(m_renderer);
 
     m_map.render(m_renderer, m_viewport.getViewport());
+    m_particle.render(m_renderer, m_viewport.getViewport(), screenWidth);
 
     SDL_RenderPresent(m_renderer);
 }

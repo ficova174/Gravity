@@ -8,8 +8,8 @@ public:
     float getZoomSpeed() const {return m_zoomSpeed;}
     SDL_FRect getViewport() const {return m_viewport;}
 
-    void setCoordinates(const Map &map, float x, float y);
     void setSize(const Map &map, float w, float h);
+    void setCoordinates(const Map &map, float x, float y);
 
     void zoom(const Map &map, float changex, float changey);
     void move(const Map &map, const bool *keys, float deltaTime);
