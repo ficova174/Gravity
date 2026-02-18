@@ -11,13 +11,46 @@ Particle::Particle(float mass) : m_mass(mass) {
         throw std::invalid_argument("Mass cannot be less than 1 kg nor negative");
     }
 
-    tempSurface = SDL_CreateSurface(sharedParticleDiameter, sharedParticleDiameter, SDL_PIXELFORMAT_RGBA8888);
+    float particleDiameter = static_cast<float>(sharedParticleDiameter) * std::sqrt(m_mass / sharedParticleMass);
 
-    if (!tempSurface) {
+    if (particleDiameter < 5.0f) {
+        throw std::domain_error("The ParticleDiameter that has been computed is too small to be displayed on screen");
+    }
+
+    m_particle.w = particleDiameter;
+    m_particle.h = particleDiameter;
+}
+
+void Particle::setSharedTexture(SDL_Renderer* renderer) {
+    SDL_Surface* surface{setSharedSurface()};
+
+    m_texture = SDL_CreateTextureFromSurface(renderer, surface);
+
+    if (!m_texture) {
+        SDL_DestroySurface(surface);
+        throw ParticleError("Creating Texture from standard particle of pixel surface failed: ", SDL_GetError());
+    }
+
+    SDL_DestroySurface(surface);
+
+    if (!SDL_GetTextureSize(m_texture, &sharedParticleWidth, &sharedParticleHeight)) {
+        throw ParticleError("Getting shared particle texture size failed: ", SDL_GetError());
+    }
+
+    if (sharedParticleMass < 1.0f) {
+        throw std::domain_error("When computing particleDiameter we divide by sharedParticleMass and take the square root, so we want to avoid unstability and domain error");
+    }
+}
+
+SDL_Surface* Particle::setSharedSurface() {
+    SDL_Surface* surface{SDL_CreateSurface(sharedParticleDiameter, sharedParticleDiameter, SDL_PIXELFORMAT_RGBA8888)};
+
+    if (!surface) {
         throw ParticleError("Standard particle pixel surface creation failed: ", SDL_GetError());
     }
 
-    if (!SDL_LockSurface(tempSurface)) {
+    if (!SDL_LockSurface(surface)) {
+        SDL_DestroySurface(surface);
         throw ParticleError("Locking up standard particle pixel surface failed: ", SDL_GetError());
     }
 
@@ -32,41 +65,17 @@ Particle::Particle(float mass) : m_mass(mass) {
             dy = y - radius;
 
             if (dx * dx + dy * dy <= radius * radius) {
-                if (!SDL_WriteSurfacePixel(tempSurface, x, y, r, g, b, a)) {
+                if (!SDL_WriteSurfacePixel(surface, x, y, r, g, b, a)) {
+                    SDL_DestroySurface(surface);
                     throw ParticleError("Writing pixel on standard particle pixel surface failed: ", SDL_GetError());
                 }
             }
         }
     }
 
-    SDL_UnlockSurface(tempSurface);
-}
+    SDL_UnlockSurface(surface);
 
-void Particle::setSharedTexture(SDL_Renderer* renderer) {
-    m_texture = SDL_CreateTextureFromSurface(renderer, tempSurface);
-
-    if (!m_texture) {
-        throw ParticleError("Creating Texture from standard particle of pixel surface failed: ", SDL_GetError());
-    }
-
-    SDL_DestroySurface(tempSurface);
-
-    if (!SDL_GetTextureSize(m_texture, &sharedParticleWidth, &sharedParticleHeight)) {
-        throw ParticleError("Getting shared particle texture size failed: ", SDL_GetError());
-    }
-
-    if (sharedParticleMass < 1.0f) {
-        throw std::domain_error("When computing particleDiameter we divide by sharedParticleMass and take the square root, so we want to avoid unstability and domain error");
-    }
-
-    float particleDiameter = static_cast<float>(sharedParticleDiameter) * std::sqrt(m_mass / sharedParticleMass);
-
-    if (particleDiameter < 5.0f) {
-        throw std::domain_error("The ParticleDiameter that has been computed is too small to be displayed on screen");
-    }
-
-    m_particle.w = particleDiameter;
-    m_particle.h = particleDiameter;
+    return surface;
 }
 
 void Particle::setCoordinates(const Map &map, float x, float y) {

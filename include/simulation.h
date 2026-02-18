@@ -1,6 +1,7 @@
 #pragma once
 
 #include <SDL3/SDL.h>
+#include <vector>
 #include "map.h"
 #include "viewport.h"
 #include "particle.h"
@@ -23,7 +24,7 @@ private:
 
     Map m_map;
     Viewport m_viewport;
-    Particle m_particle;
+    std::vector<Particle> m_particles;
 
     static constexpr float targetFPS{120.0f};
 

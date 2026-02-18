@@ -1,11 +1,12 @@
 #include <SDL3/SDL.h>
+#include <vector>
 #include "simulation.h"
 #include "simulationErrors.h"
 #include "map.h"
 #include "viewport.h"
 #include "particle.h"
 
-Simulation::Simulation(const char* appName, const char* creatorName) : m_map(), m_viewport(), m_particle(10.0f) {
+Simulation::Simulation(const char* appName, const char* creatorName) : m_map(), m_viewport() {
     if (!SDL_SetAppMetadata(appName, nullptr, nullptr)) {
         throw SimulationError("Setting up the app metadata failed: ", SDL_GetError());
     }
@@ -27,11 +28,13 @@ Simulation::Simulation(const char* appName, const char* creatorName) : m_map(), 
     }
 
     m_map.setTexture(m_renderer);
-    m_particle.setSharedTexture(m_renderer);
+    Particle::setSharedTexture(m_renderer);
+
+    m_particles.emplace_back(20.0f);
 
     m_viewport.setSize(m_map, screenWidth, screenHeight);
     m_viewport.setCoordinates(m_map, m_map.getWidth() / 2.0f, m_map.getHeight() / 2.0f);
-    m_particle.setCoordinates(m_map, m_map.getWidth() / 2.0f, m_map.getHeight() / 2.0f);
+    m_particles.at(0).setCoordinates(m_map, m_map.getWidth() / 2.0f, m_map.getHeight() / 2.0f);
 }
 
 Simulation::~Simulation() {
@@ -99,14 +102,14 @@ void Simulation::handleMovements(const bool *keys, float deltaTime) {
     SDL_PumpEvents();
 
     m_viewport.move(m_map, keys, deltaTime);
-    m_particle.move(m_map, deltaTime);
+    m_particles.at(0).move(m_map, deltaTime);
 }
 
 void Simulation::render() {
     SDL_RenderClear(m_renderer);
 
     m_map.render(m_renderer, m_viewport.getViewport());
-    m_particle.render(m_renderer, m_viewport.getViewport(), screenWidth);
+    m_particles.at(0).render(m_renderer, m_viewport.getViewport(), screenWidth);
 
     SDL_RenderPresent(m_renderer);
 }
