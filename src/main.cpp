@@ -9,7 +9,7 @@ int main() {
         simulation.run();
     }
     catch (const std::exception& e) {
-        SDL_Log("Simulation Error : %s", e.what());
+        SDL_Log(e.what());
         return -1;
     }
 

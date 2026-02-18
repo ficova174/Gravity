@@ -1,26 +1,73 @@
 #include <SDL3/SDL.h>
-#include <SDL3_image/SDL_image.h>
 #include "map.h"
 #include "mapErrors.h"
+
+void Map::setTexture(SDL_Renderer* renderer) {
+    static const int nbRows{50};
+    static const int nbColumns{200};
+    static const int size{50};
+
+    SDL_Surface* surface{SDL_CreateSurface(nbColumns, nbRows, SDL_PIXELFORMAT_RGBA8888)};
+
+    if (!surface) {
+        throw MapError("Map pixel surface creation failed: ", SDL_GetError());
+    }
+
+    if (!SDL_LockSurface(surface)) {
+        throw MapError("Locking up map pixel surface failed: ", SDL_GetError());
+    }
+
+    Uint8 r1{50}, g1{50}, b1{50}, a1{50};
+    Uint8 r2{150}, g2{150}, b2{150}, a2{150};
+
+    static bool isEvenRow, isEvenColumn;
+    for (int i = 0; i < nbRows; ++i) {
+        for (int j = 0; j < nbColumns; ++j) {
+            isEvenRow = ((i & 1) == 0);
+            isEvenColumn = ((j & 1) == 0);
+
+            if ((isEvenRow && isEvenColumn) || (!isEvenRow && !isEvenColumn)) {
+                if (!SDL_WriteSurfacePixel(surface, j, i, r1, b1, g1, a1)) {
+                    throw MapError("Writing pixel on map pixel surface case 1 failed: ", SDL_GetError());
+                }
+            }
+            else {
+                if (!SDL_WriteSurfacePixel(surface, j, i, r2, b2, g2, a2)) {
+                    throw MapError("Writing pixel on map pixel surface case 2 failed: ", SDL_GetError());
+                }
+            }
+        }
+    }
+
+    SDL_UnlockSurface(surface);
+
+    SDL_Surface* scaledSurface = SDL_ScaleSurface(surface, nbColumns*size, nbRows*size, SDL_SCALEMODE_PIXELART);
+
+    if (!scaledSurface) {
+        throw MapError("Scaling the map pixel surface failed: ", SDL_GetError());
+    }
+
+    SDL_DestroySurface(surface);
+
+    m_texture = SDL_CreateTextureFromSurface(renderer, scaledSurface);
+
+    if (!m_texture) {
+        throw MapError("Creating Texture from map of scaled pixel surface failed: ", SDL_GetError());
+    }
+
+    SDL_DestroySurface(scaledSurface);
+
+    if (!SDL_GetTextureSize(m_texture, &m_w, &m_h)) {
+        throw MapError("Getting the map texture size failed: ", SDL_GetError());
+    }
+}
 
 Map::~Map() {
     SDL_DestroyTexture(m_texture);
 }
 
-void Map::setTexture(SDL_Renderer *renderer) {
-    m_texture = IMG_LoadTexture(renderer, "../assets/map.png");
-
-    if (!m_texture) {
-        throw MapError("Map texture did not load correctly");
-    }
-
-    if (!SDL_GetTextureSize(m_texture, &w, &h)) {
-        throw MapError(SDL_GetError());
-    }
-}
-
 void Map::render(SDL_Renderer *renderer, SDL_FRect gameViewport) {
     if (!SDL_RenderTexture(renderer, m_texture, &gameViewport, nullptr)) {
-        throw MapError(SDL_GetError());
+        throw MapError("Rendering the map texture failed: ", SDL_GetError());
     }
 }

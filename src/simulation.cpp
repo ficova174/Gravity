@@ -6,27 +6,23 @@
 
 Simulation::Simulation(const char* appName, const char* creatorName) : m_map(), m_viewport() {
     if (!SDL_SetAppMetadata(appName, nullptr, nullptr)) {
-        throw SimulationError(SDL_GetError());
-    }
-
-    if (!SDL_SetAppMetadataProperty(SDL_PROP_APP_METADATA_NAME_STRING, appName)) {
-        throw SimulationError(SDL_GetError());
+        throw SimulationError("Setting up the app metadata failed: ", SDL_GetError());
     }
 
     if (!SDL_SetAppMetadataProperty(SDL_PROP_APP_METADATA_CREATOR_STRING, creatorName)) {
-        throw SimulationError(SDL_GetError());
+        throw SimulationError("Setting up the creator name for the project failed: ", SDL_GetError());
     }
 
     if (!SDL_SetAppMetadataProperty(SDL_PROP_APP_METADATA_TYPE_STRING, "application")) {
-        throw SimulationError(SDL_GetError());
+        throw SimulationError("Setting up the application metadata type failed: ", SDL_GetError());
     }
 
     if (!SDL_Init(SDL_INIT_VIDEO)) {
-        throw SimulationError(SDL_GetError());
+        throw SimulationError("Video initialisation failed: ", SDL_GetError());
     }
 
     if (!SDL_CreateWindowAndRenderer(appName, screenWidth, screenHeight, 0, &m_window, &m_renderer)) {
-        throw SimulationError(SDL_GetError());
+        throw SimulationError("Creation of the window and renderer failed: ", SDL_GetError());
     }
 
     m_map.setTexture(m_renderer);

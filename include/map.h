@@ -6,14 +6,14 @@ class Map {
 public:
     ~Map();
 
-    float getWidth() const {return w;}
-    float getHeight() const {return h;}
+    float getWidth() const {return m_w;}
+    float getHeight() const {return m_h;}
 
-    void setTexture(SDL_Renderer *renderer);
-    void render(SDL_Renderer *renderer, SDL_FRect gameViewport);
+    void setTexture(SDL_Renderer* renderer);
+    void render(SDL_Renderer* renderer, SDL_FRect gameViewport);
 
 private:
-    SDL_Texture *m_texture{nullptr};
-    float w{0.0f};
-    float h{0.0f};
+    SDL_Texture* m_texture{nullptr};
+    float m_w{0.0f};
+    float m_h{0.0f};
 };
