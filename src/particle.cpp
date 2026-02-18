@@ -6,7 +6,7 @@
 #include "particleErrors.h"
 #include "map.h"
 
-Particle::Particle(float mass) : m_mass(mass) {
+Particle::Particle(float mass, float xSpeed, float ySpeed) : m_mass(mass), m_xSpeed(xSpeed), m_ySpeed(ySpeed) {
     if (mass < 1.0f) {
         throw std::invalid_argument("Mass cannot be less than 1 kg nor negative");
     }

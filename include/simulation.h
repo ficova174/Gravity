@@ -8,9 +8,10 @@
 
 class Simulation {
 public:
-    Simulation(const char* appName, const char* creatorName);
+    Simulation(const char* appName, const char* creatorName, int initialNBParticles);
     ~Simulation();
 
+    void spawnParticles(int nbParticles);
     void run();
 
 private:

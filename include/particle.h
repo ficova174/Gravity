@@ -8,7 +8,7 @@ public:
     static void setSharedTexture(SDL_Renderer* renderer);
     static void destroySharedTexture() {SDL_DestroyTexture(m_texture);}
 
-    Particle(float mass);
+    Particle(float mass, float xSpeed, float ySpeed);
 
     void setCoordinates(const Map &map, float x, float y);
 
@@ -28,7 +28,7 @@ private:
 
     SDL_FRect m_particle{0.0f, 0.0f, 0.0f, 0.0f};
     SDL_FRect m_viewport{0.0f, 0.0f, 0.0f, 0.0f};
-    float m_xSpeed{200.0f};
-    float m_ySpeed{100.0f};
     const float m_mass;
+    float m_xSpeed;
+    float m_ySpeed;
 };
