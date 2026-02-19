@@ -3,8 +3,24 @@
 #include "mapErrors.h"
 
 void Map::setTexture(SDL_Renderer* renderer) {
+    SDL_Surface* scaledSurface{setSurface()};
+    m_texture = SDL_CreateTextureFromSurface(renderer, scaledSurface);
+
+    if (!m_texture) {
+        SDL_DestroySurface(scaledSurface);
+        throw MapError("Creating Texture from map of scaled pixel surface failed: ", SDL_GetError());
+    }
+
+    SDL_DestroySurface(scaledSurface);
+
+    if (!SDL_GetTextureSize(m_texture, &m_w, &m_h)) {
+        throw MapError("Getting the map texture size failed: ", SDL_GetError());
+    }
+}
+
+SDL_Surface* Map::setSurface() {
     constexpr int nbRows{50};
-    constexpr int nbColumns{200};
+    constexpr int nbColumns{100};
     constexpr int size{50};
 
     SDL_Surface* surface{SDL_CreateSurface(nbColumns, nbRows, SDL_PIXELFORMAT_RGBA8888)};
@@ -53,18 +69,7 @@ void Map::setTexture(SDL_Renderer* renderer) {
 
     SDL_DestroySurface(surface);
 
-    m_texture = SDL_CreateTextureFromSurface(renderer, scaledSurface);
-
-    if (!m_texture) {
-        SDL_DestroySurface(scaledSurface);
-        throw MapError("Creating Texture from map of scaled pixel surface failed: ", SDL_GetError());
-    }
-
-    SDL_DestroySurface(scaledSurface);
-
-    if (!SDL_GetTextureSize(m_texture, &m_w, &m_h)) {
-        throw MapError("Getting the map texture size failed: ", SDL_GetError());
-    }
+    return scaledSurface;
 }
 
 void Map::render(SDL_Renderer *renderer, SDL_FRect gameViewport) {

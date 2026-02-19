@@ -6,12 +6,12 @@
 #include "particleErrors.h"
 #include "map.h"
 
-Particle::Particle(float mass, float xSpeed, float ySpeed) : m_mass(mass), m_xSpeed(xSpeed), m_ySpeed(ySpeed) {
-    if (mass < 1.0f) {
+Particle::Particle(int mass, float xSpeed, float ySpeed) : m_mass(mass), m_xSpeed(xSpeed), m_ySpeed(ySpeed) {
+    if (mass < 1) {
         throw std::invalid_argument("Mass cannot be less than 1 kg nor negative");
     }
 
-    float particleDiameter = static_cast<float>(sharedParticleDiameter) * std::sqrt(m_mass / sharedParticleMass);
+    float particleDiameter = static_cast<float>(sharedParticleDiameter) * std::sqrt(static_cast<float>(m_mass) / static_cast<float>(sharedParticleMass));
 
     if (particleDiameter < 5.0f) {
         throw std::domain_error("The ParticleDiameter that has been computed is too small to be displayed on screen");
@@ -33,11 +33,7 @@ void Particle::setSharedTexture(SDL_Renderer* renderer) {
 
     SDL_DestroySurface(surface);
 
-    if (!SDL_GetTextureSize(m_texture, &sharedParticleWidth, &sharedParticleHeight)) {
-        throw ParticleError("Getting shared particle texture size failed: ", SDL_GetError());
-    }
-
-    if (sharedParticleMass < 1.0f) {
+    if (sharedParticleMass < 1) {
         throw std::domain_error("When computing particleDiameter we divide by sharedParticleMass and take the square root, so we want to avoid unstability and domain error");
     }
 }
@@ -114,6 +110,26 @@ void Particle::checkWallCollision(const Map& map) {
         m_ySpeed = -m_ySpeed;
         m_particle.y = maxY;
     }
+}
+
+bool Particle::checkCollisionParticle(Particle& otherParticle) {
+    SDL_FRect otherParticleDescriptor{otherParticle.getParticle()};
+
+    float particleRadius{m_particle.w / 2.0f};
+    float otherParticleRadius{otherParticleDescriptor.w / 2.0f};
+    
+    SDL_FPoint particleCenter{m_particle.x + particleRadius, m_particle.y + particleRadius};
+    SDL_FPoint otherParticleCenter{otherParticleDescriptor.x + otherParticleRadius, otherParticleDescriptor.y + otherParticleRadius};
+
+    float dx{particleCenter.x - otherParticleCenter.x};
+    float dy{particleCenter.y - otherParticleCenter.y};
+    float centerDistance{particleRadius + otherParticleRadius};
+
+    if (dx * dx + dy * dy <= (centerDistance) * (centerDistance)) {
+        return true;
+    }
+
+    return false;
 }
 
 void Particle::render(SDL_Renderer* renderer, SDL_FRect simulationViewport, const float screenWidth) {

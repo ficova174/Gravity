@@ -1,5 +1,6 @@
 #include <SDL3/SDL.h>
 #include <vector>
+#include <random>
 #include "simulation.h"
 #include "simulationErrors.h"
 #include "map.h"
@@ -39,9 +40,68 @@ Simulation::Simulation(const char* appName, const char* creatorName, int initial
 }
 
 void Simulation::spawnParticles(int nbParticles) {
+    std::random_device rd;
+    std::mt19937 gen(rd());
+
+    auto randomMass = [&gen]() -> int {
+        int minMass{static_cast<int>(0.01f * Particle::sharedParticleMass)};
+        int maxMass{static_cast<int>(0.1f * Particle::sharedParticleMass)};
+        std::uniform_int_distribution<int> distMass(minMass, maxMass);
+        return distMass(gen);
+    };
+
+    auto randomVelocity = [&gen]() -> std::pair<float, float> {
+        float minSpeed{100.0f};
+        float maxSpeed{500.0f};
+        std::uniform_real_distribution<float> distSpeed(minSpeed, maxSpeed);
+        std::uniform_int_distribution<int> distSign(0, 1);
+        auto randomSign = [&gen, &distSign]() -> float {return distSign(gen) == 0 ? -1.0f : 1.0f;};
+        return {randomSign() * distSpeed(gen), randomSign() * distSpeed(gen)};
+    };
+
+    auto randomCoordinate = [&gen](float min, float max) -> float {
+        std::uniform_real_distribution<float> dist(min, max);
+        return dist(gen);
+    };
+
     for (int i = 0; i < nbParticles; ++i) {
-        m_particles.emplace_back(..., ..., ...);
-        m_particles.at(i).setCoordinates(..., ...);
+        int mass{randomMass()};
+        auto [xSpeed, ySpeed] = randomVelocity();
+
+        m_particles.emplace_back(mass, xSpeed, ySpeed);
+        Particle& particle = m_particles.back();
+
+        bool collision{false};
+        do {
+            float minX{particle.getParticle().w};
+            float maxX{m_map.getWidth() - particle.getParticle().w};
+            float x{randomCoordinate(minX, maxX)};
+
+            float minY{particle.getParticle().h};
+            float maxY{m_map.getHeight() - particle.getParticle().h};
+            float y{randomCoordinate(minY, maxY)};
+
+            particle.setCoordinates(m_map, x, y);
+
+            if (m_particles.size() == 1) {
+                collision = false;
+                break;
+            }
+
+            // We need to put the collision back to false!
+            collision = false;
+            for (Particle& otherParticle : m_particles) {
+                if (&particle == &otherParticle) {
+                    continue;
+                }
+
+                if (particle.checkCollisionParticle(otherParticle)) {
+                    collision = true;
+                    break;
+                }
+            }
+        }
+        while (collision);
     }
 }
 
