@@ -1,11 +1,12 @@
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_main.h>
 #include <exception>
+#include "version.h"
 #include "simulation.h"
 
 int main() {
     try {
-        int initialNBParticles{20};
+        int initialNBParticles{5};
 
         Simulation simulation("Gravity Simulation", "Axel LT", initialNBParticles);
         simulation.run();

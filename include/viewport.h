@@ -10,7 +10,6 @@
  *          on the screen. It supports movement and zooming while ensuring
  *          that it stays within the map boundaries.
  * @author Axel LT
- * @version 1.0.0
  * @since 2026-02-17
  */
 class Viewport {
@@ -56,7 +55,7 @@ public:
      * @param changex Horizontal zoom influence (e.g. mouse position)
      * @param changey Vertical zoom influence
      */
-    void zoom(const Map &map, float changex, float changey);
+    void zoom(const Map &map, const float changex, const float changey);
 
     /**
      * @brief Move the viewport based on input keys
@@ -66,7 +65,7 @@ public:
      * @param keys Pointer to SDL keyboard state array
      * @param deltaTime Time elapsed since last frame
      */
-    void move(const Map &map, const bool *keys, float deltaTime);
+    void move(const Map &map, const bool *keys, const float deltaTime);
 
 private:
     /// Rectangle defining the visible region of the map

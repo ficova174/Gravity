@@ -12,7 +12,6 @@
  * @details The Simulation class handles initialization of particles, user input events,
  *          rendering, viewport management, and the game loop.
  * @author Axel LT
- * @version 1.0.0
  * @since 2026-02-17
  */
 class Simulation {

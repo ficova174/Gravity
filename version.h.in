@@ -1,0 +1,7 @@
+#pragma once
+
+#define Gravity_VERSION_MAJOR @Gravity_VERSION_MAJOR@
+#define Gravity_VERSION_MINOR @Gravity_VERSION_MINOR@
+#define Gravity_VERSION_PATCH @Gravity_VERSION_PATCH@
+
+#define Gravity_VERSION_STRING "@Gravity_VERSION@"

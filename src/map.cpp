@@ -72,7 +72,7 @@ SDL_Surface* Map::setSurface() {
     return scaledSurface;
 }
 
-void Map::render(SDL_Renderer *renderer, SDL_FRect gameViewport) {
+void Map::render(SDL_Renderer *renderer, const SDL_FRect gameViewport) {
     if (!SDL_RenderTexture(renderer, m_texture, &gameViewport, nullptr)) {
         throw MapError("Rendering the map texture failed: ", SDL_GetError());
     }

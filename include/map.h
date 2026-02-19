@@ -7,7 +7,6 @@
  * @brief Represents the simulation map
  * @details The map is made by "hand" using a surface and writing pixels.
  * @author Axel LT
- * @version 1.0.0
  * @since 2026-02-17
  */
 class Map {
@@ -38,7 +37,7 @@ public:
      * @param renderer SDL_Renderer to render to
      * @param gameViewport Portion of the map currently visible on screen
      */
-    void render(SDL_Renderer* renderer, SDL_FRect gameViewport);
+    void render(SDL_Renderer* renderer, const SDL_FRect gameViewport);
 
 private:
     /**
@@ -51,6 +50,6 @@ private:
     SDL_Texture* m_texture{nullptr};
 
     /// Map dimensions in pixels
-    float m_w{0.0f};
-    float m_h{0.0f};
+    float m_w;
+    float m_h;
 };

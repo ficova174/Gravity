@@ -1,6 +1,7 @@
 #pragma once
 
 #include <SDL3/SDL.h>
+#include "Eigen/Dense"
 #include "map.h"
 
 /**
@@ -9,7 +10,6 @@
  * @details Handles particle creation, movement, collisions, rendering, and shared texture management.
  * @warning The texture is shared between instances thus we can't delete the texture until the end of the simulation
  * @author Axel LT
- * @version 1.0.0
  * @since 2026-02-18
  */
 class Particle {
@@ -33,10 +33,9 @@ public:
     /**
      * @brief Construct a particle with mass and initial velocity
      * @param mass Particle mass
-     * @param xSpeed Initial velocity in x direction
-     * @param ySpeed Initial velocity in y direction
+     * @param velocity Initial velocity vector
      */
-    Particle(int mass, float xSpeed, float ySpeed);
+    Particle(const int mass, const Eigen::Vector2f velocity);
 
 
     /**
@@ -55,20 +54,34 @@ public:
 
 
     /**
-     * @brief Move the particle based on its velocity and deltaTime
-     * @param map Reference to the map (for collision checking)
-     * @param deltaTime Time elapsed since last frame
-     */
-    void move(const Map& map, const float deltaTime);
-
-    /**
-     * @brief Check collision with another particle
-     * @note Member function needs to be public as it's used during the particle's creation
+     * @brief Check collision with another particle during particle instanciation
+     * @warning Can't be used before solveCollisionParticle as it uses the squared distance
      * @param otherParticle References particle to check for collision
      * @return True if collision else False
      * @see Simulation::spawnParticles
      */
-    bool checkCollisionParticle(Particle& otherParticle);
+    bool checkCollisionInit(const Particle& otherParticle);
+
+    /**
+     * @brief Move the particle based on its velocity and deltaTime
+     * @details Wall and particle collisions are checked AFTER moving
+     * @param deltaTime Time elapsed since last frame
+     */
+    void move(const float deltaTime);
+
+    /**
+     * @brief Solve wall collisions and adjust particle position/velocity
+     * @details Clamp the position on the map and reverse the normal component of velocity
+     * @note Sould be used after moving the particle
+     * @param map Reference to the map
+     */
+    void solveWallCollision(const Map& map);
+
+    /**
+     * @brief Check collision with another particle and compute the outcome
+     * @param otherParticle References particle we could collide with
+     */
+    void checkSolveCollision(Particle& otherParticle);
 
     /**
      * @brief Render the particle on the screen
@@ -77,7 +90,7 @@ public:
      * @param simulationViewport The current simulation viewport
      * @param screenWidth Width of the screen for scaling
      */
-    void render(SDL_Renderer* renderer, SDL_FRect simulationViewport, const float screenWidth);
+    void render(SDL_Renderer* renderer, const SDL_FRect simulationViewport, const float screenWidth);
 
 private:
     /**
@@ -92,29 +105,16 @@ private:
 
 
     /**
-     * @brief Check for wall collisions and adjust particle position/velocity
-     * @details Clamp the position on the map and reverse the normal component of velocity
-     * @see Particle::move
-     * @param map Reference to the map
-     */
-    void checkWallCollision(const Map& map);
-
-    /**
-     * @brief In the case of a collision we are computing its outcome
+     * @brief Compute the velocity components in world coordinates
      * @param otherParticle References particle we collided with
-     * @see Particle::checkCollisionParticle
+     * @param normalUnitVector Normal unit vector of the collision plane
+     * @see Particle::checkSolveCollision
      */
-    void solveCollisionParticle(Particle& otherParticle);
+    void solveCollision(Particle& otherParticle, const Eigen::Vector2f& normalUnitVector);
 
 
     /// Particle position and size
     SDL_FRect m_particle{0.0f, 0.0f, 0.0f, 0.0f};
-
-    /**
-     * @brief Particle center position
-     * @warning This should be computed only when needed!
-     */
-    SDL_FPoint m_center{0.0f, 0.0f};
 
     /// Particle viewport for rendering
     SDL_FRect m_viewport{0.0f, 0.0f, 0.0f, 0.0f};
@@ -122,7 +122,6 @@ private:
     /// Particle mass (constant per instance)
     const int m_mass;
 
-    /// Particle velocity components
-    float m_xSpeed;
-    float m_ySpeed;
+    /// Particle velocity components (x, y)
+    Eigen::Vector2f m_velocity;
 };

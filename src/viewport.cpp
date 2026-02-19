@@ -24,9 +24,9 @@ void Viewport::setCoordinates(const Map &map, float x, float y) {
     m_viewport.y = std::clamp(m_viewport.y, 0.0f, map.getHeight() - m_viewport.h);
 }
 
-void Viewport::zoom(const Map &map, float changex, float changey) {
-    float mapWidth = map.getWidth();
-    float mapHeight = map.getHeight();
+void Viewport::zoom(const Map &map, const float changex, const float changey) {
+    const float mapWidth = map.getWidth();
+    const float mapHeight = map.getHeight();
 
     // 500 is arbitrary and represents min height
     bool lessMinHeight{(m_viewport.h + changey < 500.0f)};
@@ -47,7 +47,7 @@ void Viewport::zoom(const Map &map, float changex, float changey) {
     m_viewport.y = std::clamp(m_viewport.y, 0.0f, mapHeight - m_viewport.h);
 }
 
-void Viewport::move(const Map &map, const bool *keys, float deltaTime) {
+void Viewport::move(const Map &map, const bool *keys, const float deltaTime) {
     float dx{0.0f};
     float dy{0.0f};
 

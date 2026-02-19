@@ -1,6 +1,7 @@
 #include <SDL3/SDL.h>
 #include <vector>
 #include <random>
+#include <cmath>
 #include "simulation.h"
 #include "simulationErrors.h"
 #include "map.h"
@@ -43,36 +44,31 @@ void Simulation::spawnParticles(int nbParticles) {
     std::random_device rd;
     std::mt19937 gen(rd());
 
-    auto randomMass = [&gen]() -> int {
-        int minMass{static_cast<int>(0.01f * Particle::sharedParticleMass)};
-        int maxMass{static_cast<int>(0.1f * Particle::sharedParticleMass)};
-        std::uniform_int_distribution<int> distMass(minMass, maxMass);
-        return distMass(gen);
-    };
+    int minMass{static_cast<int>(0.01f * Particle::sharedParticleMass)};
+    int maxMass{static_cast<int>(0.1f * Particle::sharedParticleMass)};
+    std::uniform_int_distribution<int> distMass(minMass, maxMass);
 
-    auto randomVelocity = [&gen]() -> std::pair<float, float> {
-        float minSpeed{100.0f};
-        float maxSpeed{500.0f};
-        std::uniform_real_distribution<float> distSpeed(minSpeed, maxSpeed);
-        std::uniform_int_distribution<int> distSign(0, 1);
-        auto randomSign = [&gen, &distSign]() -> float {return distSign(gen) == 0 ? -1.0f : 1.0f;};
-        return {randomSign() * distSpeed(gen), randomSign() * distSpeed(gen)};
-    };
+    float maxSpeed{500.0f};
+    std::uniform_real_distribution<float> distSpeed(100.0f, maxSpeed);
+    std::uniform_real_distribution<float> distAngle(0.0f, 2.0f * M_PI);
 
     auto randomCoordinate = [&gen](float min, float max) -> float {
-        std::uniform_real_distribution<float> dist(min, max);
-        return dist(gen);
+        std::uniform_real_distribution<float> distCoord(min, max);
+        return distCoord(gen);
     };
 
     for (int i = 0; i < nbParticles; ++i) {
-        int mass{randomMass()};
-        auto [xSpeed, ySpeed] = randomVelocity();
+        int mass{distMass(gen)};
+        Eigen::Vector2f velocity{distSpeed(gen) * std::cos(distAngle(gen)),
+                                distSpeed(gen) * std::sin(distAngle(gen))};
 
-        m_particles.emplace_back(mass, xSpeed, ySpeed);
-        Particle& particle = m_particles.back();
+        m_particles.emplace_back(mass, velocity);
+        Particle& particle{m_particles.back()};
 
         bool collision{false};
         do {
+            // We want the particle to be in the map
+            // We know the particle's radius
             float minX{particle.getParticle().w};
             float maxX{m_map.getWidth() - particle.getParticle().w};
             float x{randomCoordinate(minX, maxX)};
@@ -95,7 +91,7 @@ void Simulation::spawnParticles(int nbParticles) {
                     continue;
                 }
 
-                if (particle.checkCollisionParticle(otherParticle)) {
+                if (particle.checkCollisionInit(otherParticle)) {
                     collision = true;
                     break;
                 }
@@ -168,11 +164,19 @@ void Simulation::handleZoom(SDL_Event &event) {
 
 void Simulation::handleMovements(const bool *keys, float deltaTime) {
     SDL_PumpEvents();
-
     m_viewport.move(m_map, keys, deltaTime);
 
-    for (Particle& particle : m_particles) {
-        particle.move(m_map, deltaTime);
+    for (size_t i = 0; i < m_particles.size(); ++i) {
+        Particle& particle{m_particles.at(i)};
+
+        particle.move(deltaTime);
+        particle.solveWallCollision(m_map);
+
+        for (size_t j = i + 1; j < m_particles.size(); ++j) {
+            Particle& otherParticle{m_particles.at(j)};
+
+            particle.checkSolveCollision(otherParticle);
+        }
     }
 }
 
