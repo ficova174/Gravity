@@ -5,7 +5,7 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
-## [Unreleased]
+## [0.6.0] - 2026-02-20
 ### Added
 - Added Dear ImGui files
 - Added a Dear ImGui window displaying the fps count, enabling the user to set the number of particles and displaying the total kinetic energy
