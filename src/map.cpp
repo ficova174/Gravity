@@ -19,8 +19,8 @@ void Map::setTexture(SDL_Renderer* renderer) {
 }
 
 SDL_Surface* Map::setSurface() {
-    constexpr int nbRows{50};
-    constexpr int nbColumns{100};
+    constexpr int nbRows{300};
+    constexpr int nbColumns{300};
     constexpr int size{50};
 
     SDL_Surface* surface{SDL_CreateSurface(nbColumns, nbRows, SDL_PIXELFORMAT_RGBA8888)};

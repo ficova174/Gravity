@@ -49,7 +49,7 @@ void Simulation::spawnParticles(int nbParticles) {
     std::uniform_int_distribution<int> distMass(minMass, maxMass);
 
     float maxSpeed{500.0f};
-    std::uniform_real_distribution<float> distSpeed(100.0f, maxSpeed);
+    std::uniform_real_distribution<float> distSpeed(0.0f, maxSpeed);
     std::uniform_real_distribution<float> distAngle(0.0f, 2.0f * M_PI);
 
     auto randomCoordinate = [&gen](float min, float max) -> float {
@@ -60,15 +60,22 @@ void Simulation::spawnParticles(int nbParticles) {
     for (int i = 0; i < nbParticles; ++i) {
         int mass{distMass(gen)};
         Eigen::Vector2f velocity{distSpeed(gen) * std::cos(distAngle(gen)),
-                                distSpeed(gen) * std::sin(distAngle(gen))};
+                                 distSpeed(gen) * std::sin(distAngle(gen))};
 
         m_particles.emplace_back(mass, velocity);
         Particle& particle{m_particles.back()};
 
         bool collision{false};
+        int counter{0};
         do {
             // We want the particle to be in the map
             // We know the particle's radius
+            
+            ++counter;
+            if (counter > 3 * nbParticles) {
+                throw SimulationError("When initialising there is not enough place to put the particles onto the map");
+            }
+
             float minX{particle.getParticle().w};
             float maxX{m_map.getWidth() - particle.getParticle().w};
             float x{randomCoordinate(minX, maxX)};

@@ -7,7 +7,15 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+---
 
+## [0.5.1] - 2026-02-19
+### Added
+- Checking if particles fit in the map during initialisation, if not throws error
+
+### Fixed
+- Buggy physics collisions
+- Overlaping/jiggling
 
 ---
 

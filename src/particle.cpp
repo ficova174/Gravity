@@ -119,9 +119,11 @@ bool Particle::checkCollisionInit(const Particle& otherParticle) {
     float particleRadius{m_particle.w / 2.0f};
     float otherParticleRadius{otherParticleDescriptor.w / 2.0f};
 
-    Eigen::Vector2f particleCenterCoord{m_particle.x + particleRadius, m_particle.y + particleRadius};
-    Eigen::Vector2f otherParticleCenterCoord{otherParticleDescriptor.x + otherParticleRadius, otherParticleDescriptor.y + otherParticleRadius};
-    Eigen::Vector2f deltaPos{particleCenterCoord - otherParticleCenterCoord};
+    Eigen::Vector2f particleCenterCoord{m_particle.x + particleRadius,
+                                        m_particle.y + particleRadius};
+    Eigen::Vector2f otherParticleCenterCoord{otherParticleDescriptor.x + otherParticleRadius,
+                                             otherParticleDescriptor.y + otherParticleRadius};
+    Eigen::Vector2f deltaPos{otherParticleCenterCoord - particleCenterCoord};
 
     float actualCenterDistanceSquared{deltaPos.dot(deltaPos)};
     float expectedCenterDistanceSquared{(particleRadius + otherParticleRadius) * (particleRadius + otherParticleRadius)};
@@ -136,63 +138,69 @@ bool Particle::checkCollisionInit(const Particle& otherParticle) {
 void Particle::checkSolveCollision(Particle& otherParticle) {
     SDL_FRect otherParticleDescriptor{otherParticle.getParticle()};
 
-    float particleRadius{m_particle.w / 2.0f};
-    float otherParticleRadius{otherParticleDescriptor.w / 2.0f};
+    const float particleRadius{m_particle.w / 2.0f};
+    const float otherParticleRadius{otherParticleDescriptor.w / 2.0f};
 
-    Eigen::Vector2f particleCenterCoord{m_particle.x + particleRadius, m_particle.y + particleRadius};
-    Eigen::Vector2f otherParticleCenterCoord{otherParticleDescriptor.x + otherParticleRadius, otherParticleDescriptor.y + otherParticleRadius};
-    Eigen::Vector2f deltaPos{particleCenterCoord - otherParticleCenterCoord};
+    Eigen::Vector2f particleCenterCoord{m_particle.x + particleRadius,
+                                        m_particle.y + particleRadius};
+    Eigen::Vector2f otherParticleCenterCoord{otherParticleDescriptor.x + otherParticleRadius,
+                                             otherParticleDescriptor.y + otherParticleRadius};
+    Eigen::Vector2f deltaPos{otherParticleCenterCoord - particleCenterCoord};
 
-    float actualCenterDistance{deltaPos.norm()};
-    float expectedCenterDistance{particleRadius + otherParticleRadius};
-
+    const float actualCenterDistance{deltaPos.norm()};
+    const float expectedCenterDistance{particleRadius + otherParticleRadius};
+    
     if (actualCenterDistance <= expectedCenterDistance) {
-        Eigen::Vector2f normalUnitVector{deltaPos(0) / actualCenterDistance, deltaPos(1) / actualCenterDistance};
+        Eigen::Vector2f normalUnitVector{deltaPos(0) / actualCenterDistance,
+                                         deltaPos(1) / actualCenterDistance};
+
         solveCollision(otherParticle, normalUnitVector);
+
+        // Solves the overlapping/jiggling issue
+        const float overlap = expectedCenterDistance - actualCenterDistance;
+
+        m_particle.x -= 0.5f * overlap * normalUnitVector(0);
+        m_particle.y -= 0.5f * overlap * normalUnitVector(1);
+
+        otherParticle.m_particle.x += 0.5f * overlap * normalUnitVector(0);
+        otherParticle.m_particle.y += 0.5f * overlap * normalUnitVector(1);
     }
 }
 
 void Particle::solveCollision(Particle& otherParticle, const Eigen::Vector2f& normalUnitVector) {
     // The main idea is that we are solving the system of equation along the normal plane of the impact
     // the collisation is perfectly elastic, the system of equation can be found online
-
-    // 90° counterclockwise rotation matrix (it preserves distances as det(R) = 1)
-    Eigen::Matrix2f R{{0, -1},
-                      {1, 0}};
-
-    const Eigen::Vector2f tangentUnitVector{R * normalUnitVector};
+    const Eigen::Vector2f tangentUnitVector{-normalUnitVector(1),
+                                            normalUnitVector(0)};
 
     Eigen::Vector2f particleVelocityNT{m_velocity.dot(normalUnitVector),
                                        m_velocity.dot(tangentUnitVector)};
-
     Eigen::Vector2f otherParticleVelocityNT{otherParticle.m_velocity.dot(normalUnitVector),
                                             otherParticle.m_velocity.dot(tangentUnitVector)};
 
-    const float denominator{static_cast<float>(m_mass + otherParticle.m_mass)};
+    const float sumMass{static_cast<float>(m_mass + otherParticle.m_mass)};
 
     // particle coefficients
-    const float firstCoeff{(m_mass - otherParticle.m_mass) / denominator};
-    const float secondCoeff{(2 * otherParticle.m_mass) / denominator};
+    const float firstCoeff{(m_mass - otherParticle.m_mass) / sumMass};
+    const float secondCoeff{(2 * otherParticle.m_mass) / sumMass};
 
     // other particle coefficients
-    const float thirdCoeff{(2 * m_mass) / denominator};
+    const float thirdCoeff{(2 * m_mass) / sumMass};
     const float fourthCoeff{-firstCoeff};
 
+    Eigen::Vector2f newNormalVelocities{firstCoeff * particleVelocityNT(0) + secondCoeff * otherParticleVelocityNT(0),
+                                        thirdCoeff * particleVelocityNT(0) + fourthCoeff * otherParticleVelocityNT(0)};
 
-    Eigen::Vector2f normalVelocities{firstCoeff * particleVelocityNT(0) + secondCoeff * otherParticleVelocityNT(0),
-                                     thirdCoeff * particleVelocityNT(0) + fourthCoeff * otherParticleVelocityNT(0)};
-
-    Eigen::Vector2f particleFinalVelocityNT{particleVelocityNT(0) - normalVelocities(0),
+    Eigen::Vector2f particleFinalVelocityNT{newNormalVelocities(0),
                                             particleVelocityNT(1)};
-
-    Eigen::Vector2f otherParticleFinalVelocityNT{otherParticleVelocityNT(0) - normalVelocities(1),
+    Eigen::Vector2f otherParticleFinalVelocityNT{newNormalVelocities(1),
                                                  otherParticleVelocityNT(1)};
 
-    // 2D rotation matrices are orthogonal
-    Eigen::Matrix2f iR{R.transpose()};
+    Eigen::Vector2f particleFinalVelocityXY{particleFinalVelocityNT(0) * normalUnitVector + particleFinalVelocityNT(1) * tangentUnitVector};
+    Eigen::Vector2f otherParticleFinalVelocityXY{otherParticleFinalVelocityNT(0) * normalUnitVector + otherParticleFinalVelocityNT(1) * tangentUnitVector};
 
-    m_velocity = iR * particleFinalVelocityNT;
-    otherParticle.m_velocity = iR * otherParticleFinalVelocityNT;
+    m_velocity = particleFinalVelocityXY;
+    otherParticle.m_velocity = otherParticleFinalVelocityXY;
 }
 
 void Particle::render(SDL_Renderer* renderer, const SDL_FRect simulationViewport, const float screenWidth) {

@@ -6,7 +6,7 @@
 
 int main() {
     try {
-        int initialNBParticles{5};
+        int initialNBParticles{100};
 
         Simulation simulation("Gravity Simulation", "Axel LT", initialNBParticles);
         simulation.run();
