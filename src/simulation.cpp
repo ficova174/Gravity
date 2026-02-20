@@ -12,7 +12,7 @@
 #include "viewport.h"
 #include "particle.h"
 
-Simulation::Simulation(const char* appName, const char* creatorName, int initialNBParticles) : m_map(), m_viewport() {
+Simulation::Simulation(const char* appName, const char* creatorName) : m_map(), m_viewport() {
     if (!SDL_SetAppMetadata(appName, nullptr, nullptr)) {
         throw SimulationError("Setting up the app metadata failed: ", SDL_GetError());
     }
@@ -38,8 +38,8 @@ Simulation::Simulation(const char* appName, const char* creatorName, int initial
 
     m_viewport.setSize(m_map, screenWidth, screenHeight);
 
-    m_particles.reserve(initialNBParticles);
-    spawnParticles(initialNBParticles);
+    m_particles.reserve(maxNBParticlesSim);
+    spawnDestroyParticles(nbParticlesWantedSim);
 
     // Setup Dear ImGui context
     IMGUI_CHECKVERSION();
@@ -49,6 +49,32 @@ Simulation::Simulation(const char* appName, const char* creatorName, int initial
     // Setup Platform/Renderer backends
     ImGui_ImplSDL3_InitForSDLRenderer(m_window, m_renderer);
     ImGui_ImplSDLRenderer3_Init(m_renderer);
+}
+
+void Simulation::spawnDestroyParticles(int nbParticlesWanted) {
+    if (nbParticlesWanted < 0) {
+        throw SimulationError("You can't have a negative number of particles");
+    }
+
+    int diff{nbParticlesSim - nbParticlesWanted};
+
+    if (diff == 0) {
+        return;
+    } else if (diff > 0) {
+        destroyParticles(diff);
+    } else {
+        int absDiff{-diff};
+        spawnParticles(absDiff);
+    }
+
+    nbParticlesSim = nbParticlesWanted;
+}
+
+void Simulation::destroyParticles(int nbParticles) {
+    for (int i = 0; i < nbParticles; ++i) {
+        // It calls the object
+        m_particles.pop_back();
+    }
 }
 
 void Simulation::spawnParticles(int nbParticles) {
@@ -83,7 +109,8 @@ void Simulation::spawnParticles(int nbParticles) {
             // We know the particle's radius
             
             ++counter;
-            if (counter > 3 * nbParticles) {
+            constexpr int nbTimesToTry{3};
+            if (counter > nbTimesToTry * nbParticles) {
                 throw SimulationError("When initialising there is not enough place to put the particles onto the map");
             }
 
@@ -148,7 +175,7 @@ void Simulation::run() {
         ImGui_ImplSDL3_NewFrame();
         ImGui::NewFrame();
 
-        ImGui::ShowDemoWindow();
+        myImGuiWindow();
 
         handleEvents(event, running);
 
@@ -173,6 +200,7 @@ void Simulation::run() {
 void Simulation::handleEvents(SDL_Event &event, bool &running) {
     while (SDL_PollEvent(&event)) {
         ImGui_ImplSDL3_ProcessEvent(&event);
+
         switch (event.type) {
             case SDL_EVENT_QUIT:
                 running = false;
@@ -210,10 +238,13 @@ void Simulation::handleMovements(const bool *keys, float deltaTime) {
 }
 
 void Simulation::render() {
+    if (!SDL_SetRenderDrawColor(m_renderer, 0, 0, 0, 255)) {
+        SimulationError("Setting renderer draw color failed: ", SDL_GetError());
+    }
+
     SDL_RenderClear(m_renderer);
 
-    ImGui::Render();
-    ImGui_ImplSDLRenderer3_RenderDrawData(ImGui::GetDrawData(), m_renderer);
+    // Order of rendering matters for layering
 
     m_map.render(m_renderer, m_viewport.getViewport());
 
@@ -221,5 +252,46 @@ void Simulation::render() {
         particle.render(m_renderer, m_viewport.getViewport(), screenWidth);
     }
 
+    ImGui::Render();
+    ImGui_ImplSDLRenderer3_RenderDrawData(ImGui::GetDrawData(), m_renderer);
+
     SDL_RenderPresent(m_renderer);
+}
+
+void Simulation::myImGuiWindow() {
+    ImGui::SetNextWindowPos(ImVec2(0, 0), ImGuiCond_FirstUseEver);
+    ImGui::Begin("Simulation toolbox and information center", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
+
+    ImGuiIO& io = ImGui::GetIO();
+
+    ImGui::Text("Simulation average %.3f ms/frame (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);
+
+    // Nb particles simulation
+    if (ImGui::Button("-") && (nbParticlesWantedSim > 0)) {
+        --nbParticlesWantedSim;
+    }
+    ImGui::SameLine();
+    ImGui::SliderInt("##nbParticles slider", &nbParticlesWantedSim, 0, maxNBParticlesSim);
+    ImGui::SameLine();
+    if (ImGui::Button("+") && (nbParticlesWantedSim < maxNBParticlesSim)) {
+        ++nbParticlesWantedSim;
+    }
+    ImGui::SameLine();
+    ImGui::Text("Particles");
+
+    spawnDestroyParticles(nbParticlesWantedSim);
+
+    ImGui::Text("Total kinetic energy (MJ) : %.3f", getTotalKineticEnergy() / 1e6);
+
+    ImGui::End();
+}
+
+float Simulation::getTotalKineticEnergy() {
+    float sum{0.0f};
+
+    for (Particle& particle : m_particles) {
+        sum += particle.getKineticEnergy();
+    }
+
+    return sum;
 }

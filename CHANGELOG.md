@@ -8,7 +8,7 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 ### Added
 - Added Dear ImGui files
-- Added working Dear ImGui demo window
+- Added a Dear ImGui window displaying the fps count, enabling the user to set the number of particles and displaying the total kinetic energy
 
 ### Changed
 - Now viewport as big as possible to get an overall view of the map

@@ -53,6 +53,15 @@ public:
      */
     SDL_FRect getParticle() const {return m_particle;}
 
+    /**
+     * @brief Get the particle kinetic energy (J)
+     * @return float containing the particle kinetic energy (J)
+     */
+    float getKineticEnergy() const {
+        float speed{m_velocity.norm()};
+        return (m_mass / 2.0f) * speed * speed;
+    }
+
 
     /**
      * @brief Check collision with another particle during particle instanciation

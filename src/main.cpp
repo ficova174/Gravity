@@ -7,9 +7,7 @@
 
 int main() {
     try {
-        int initialNBParticles{100};
-
-        Simulation simulation("Gravity Simulation", "Axel LT", initialNBParticles);
+        Simulation simulation("Gravity Simulation", "Axel LT");
         simulation.run();
     }
     catch (const std::exception& e) {

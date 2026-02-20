@@ -21,9 +21,8 @@ public:
      * @brief Construct a Simulation object
      * @param appName Name of the application
      * @param creatorName Name of the creator
-     * @param initialNBParticles Number of initial particles to spawn
      */
-    Simulation(const char* appName, const char* creatorName, int initialNBParticles);
+    Simulation(const char* appName, const char* creatorName);
 
     /**
      * @brief Destroy the Simulation object and clean up resources
@@ -32,17 +31,18 @@ public:
 
 
     /**
-     * @brief Spawn the initial particles on the map
-     * @details Particles are spawned randomly without overlapping.
+     * @brief Spawn or destroy particles onto the map
+     * @details Particles are spawned randomly without overlapping
+     *          They are destroyed if the nbParticlesWanted is lower than the actual number of particles
      *          Generate a random mass
      *          Generate the Particle
      *          Generate random coordinates on the map (minus the sides, after genererating the particle we know its radius)
      *          Check for collision with other particles (naive approach)
      *          If collision then generate other coordinates until it works
      * @warning The map needs to have enough blank space!
-     * @param nbParticles Number of particles to spawn
+     * @param nbParticlesWanted Number of particles we want
      */
-    void spawnParticles(int nbParticles);
+    void spawnDestroyParticles(int nbParticlesWanted);
 
     /**
      * @brief Run the main simulation loop
@@ -51,10 +51,16 @@ public:
     void run();
 
 private:
+    float getTotalKineticEnergy();
+
+    void destroyParticles(int nbParticles);
+    void spawnParticles(int nbParticles);
+    void myImGuiWindow();
     void handleEvents(SDL_Event &event, bool &running);
     void handleZoom(SDL_Event &event);
     void handleMovements(const bool *keys, float deltaTime);
     void render();
+
 
     SDL_Window* m_window{nullptr};
     SDL_Renderer* m_renderer{nullptr};
@@ -62,6 +68,10 @@ private:
     Map m_map;
     Viewport m_viewport;
     std::vector<Particle> m_particles;
+
+    int nbParticlesSim{0};
+    int nbParticlesWantedSim{3};
+    static constexpr int maxNBParticlesSim{1000};
 
     static constexpr float targetFPS{120.0f};
     static constexpr float screenHeight{800.0f};
