@@ -3,6 +3,7 @@
 #include <cmath>
 #include <stdexcept>
 #include "Eigen/Dense"
+
 #include "particle.h"
 #include "particleErrors.h"
 #include "map.h"

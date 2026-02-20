@@ -1,4 +1,5 @@
 #include <SDL3/SDL.h>
+
 #include "map.h"
 #include "mapErrors.h"
 

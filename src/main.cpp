@@ -2,6 +2,7 @@
 #include <SDL3/SDL_main.h>
 #include <exception>
 #include "version.h"
+
 #include "simulation.h"
 
 int main() {

@@ -13,12 +13,23 @@ find_package(SDL3 REQUIRED)
 
 add_compile_options(-Wall -Wextra -Werror -pedantic -Wshadow -O0 -g)
 
+set(IMGUI_DIR "third_party/imgui")
+
 add_executable(Gravity
     src/main.cpp
     src/simulation.cpp
     src/map.cpp
     src/viewport.cpp
     src/particle.cpp
+
+    ${IMGUI_DIR}/imgui.cpp
+    ${IMGUI_DIR}/imgui_demo.cpp
+    ${IMGUI_DIR}/imgui_draw.cpp
+    ${IMGUI_DIR}/imgui_tables.cpp
+    ${IMGUI_DIR}/imgui_widgets.cpp
+
+    ${IMGUI_DIR}/backends/imgui_impl_sdl3.cpp
+    ${IMGUI_DIR}/backends/imgui_impl_sdlrenderer3.cpp
 )
 
 target_include_directories(Gravity PRIVATE

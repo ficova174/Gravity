@@ -6,11 +6,14 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 ---
 
 ## [Unreleased]
+### Added
+- Added Dear ImGui files
+- Added working Dear ImGui demo window
+
 ### Changed
 - Now viewport as big as possible to get an overall view of the map
 - Viewport::setCoordinates() deleted
 - Added Readme and License of Eigen
-- Added imgui files
 
 ---
 

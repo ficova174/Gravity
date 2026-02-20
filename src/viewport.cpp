@@ -1,6 +1,7 @@
 #include <SDL3/SDL.h>
 #include <algorithm>
 #include <cmath>
+
 #include "viewport.h"
 #include "viewportErrors.h"
 #include "map.h"

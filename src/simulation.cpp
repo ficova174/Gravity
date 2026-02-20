@@ -2,6 +2,10 @@
 #include <vector>
 #include <random>
 #include <cmath>
+#include "imgui.h"
+#include "imgui_impl_sdl3.h"
+#include "imgui_impl_sdlrenderer3.h"
+
 #include "simulation.h"
 #include "simulationErrors.h"
 #include "map.h"
@@ -36,6 +40,15 @@ Simulation::Simulation(const char* appName, const char* creatorName, int initial
 
     m_particles.reserve(initialNBParticles);
     spawnParticles(initialNBParticles);
+
+    // Setup Dear ImGui context
+    IMGUI_CHECKVERSION();
+    ImGui::CreateContext();
+    ImGui::StyleColorsDark();
+
+    // Setup Platform/Renderer backends
+    ImGui_ImplSDL3_InitForSDLRenderer(m_window, m_renderer);
+    ImGui_ImplSDLRenderer3_Init(m_renderer);
 }
 
 void Simulation::spawnParticles(int nbParticles) {
@@ -46,7 +59,7 @@ void Simulation::spawnParticles(int nbParticles) {
     int maxMass{static_cast<int>(0.1f * Particle::sharedParticleMass)};
     std::uniform_int_distribution<int> distMass(minMass, maxMass);
 
-    float maxSpeed{500.0f};
+    float maxSpeed{5000.0f};
     std::uniform_real_distribution<float> distSpeed(0.0f, maxSpeed);
     std::uniform_real_distribution<float> distAngle(0.0f, 2.0f * M_PI);
 
@@ -107,6 +120,10 @@ void Simulation::spawnParticles(int nbParticles) {
 }
 
 Simulation::~Simulation() {
+    ImGui_ImplSDLRenderer3_Shutdown();
+    ImGui_ImplSDL3_Shutdown();
+    ImGui::DestroyContext();
+
     Particle::destroySharedTexture();
     SDL_DestroyRenderer(m_renderer);
     SDL_DestroyWindow(m_window);
@@ -123,9 +140,15 @@ void Simulation::run() {
     while (running) {
         // FPS counter
         Uint64 currentCounter{SDL_GetPerformanceCounter()};
-        // Convert to seconds
-        float deltaTime{static_cast<float>(currentCounter - lastCounter) / static_cast<float>(perfFreq)};
+        float deltaTime{static_cast<float>(currentCounter - lastCounter) / static_cast<float>(perfFreq)};  // Convert to seconds
         lastCounter = currentCounter;
+
+        // Start the Dear ImGui frame
+        ImGui_ImplSDLRenderer3_NewFrame();
+        ImGui_ImplSDL3_NewFrame();
+        ImGui::NewFrame();
+
+        ImGui::ShowDemoWindow();
 
         handleEvents(event, running);
 
@@ -149,6 +172,7 @@ void Simulation::run() {
 
 void Simulation::handleEvents(SDL_Event &event, bool &running) {
     while (SDL_PollEvent(&event)) {
+        ImGui_ImplSDL3_ProcessEvent(&event);
         switch (event.type) {
             case SDL_EVENT_QUIT:
                 running = false;
@@ -187,6 +211,9 @@ void Simulation::handleMovements(const bool *keys, float deltaTime) {
 
 void Simulation::render() {
     SDL_RenderClear(m_renderer);
+
+    ImGui::Render();
+    ImGui_ImplSDLRenderer3_RenderDrawData(ImGui::GetDrawData(), m_renderer);
 
     m_map.render(m_renderer, m_viewport.getViewport());
 
