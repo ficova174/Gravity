@@ -25,9 +25,9 @@ target_include_directories(Gravity PRIVATE
     ${CMAKE_CURRENT_BINARY_DIR}
     ${CMAKE_CURRENT_SOURCE_DIR}/include
     ${CMAKE_CURRENT_SOURCE_DIR}/include/errors
-    ${CMAKE_CURRENT_SOURCE_DIR}/thirdParty
-    ${CMAKE_CURRENT_SOURCE_DIR}/thirdParty/imgui
-    ${CMAKE_CURRENT_SOURCE_DIR}/thirdParty/imgui/backends
+    ${CMAKE_CURRENT_SOURCE_DIR}/third_party
+    ${CMAKE_CURRENT_SOURCE_DIR}/third_party/imgui
+    ${CMAKE_CURRENT_SOURCE_DIR}/third_party/imgui/backends
 )
 
 target_link_libraries(Gravity PRIVATE
