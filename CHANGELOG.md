@@ -9,6 +9,13 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [0.5.2] - 2026-02-20
+### Changed
+- Now viewport as big as possible to get an overall view of the map
+- Viewport::setCoordinates() deleted
+
+---
+
 ## [0.5.1] - 2026-02-19
 ### Added
 - Checking if particles fit in the map during initialisation, if not throws error

@@ -30,21 +30,12 @@ public:
      * @brief Set the viewport size
      * @details Adjusts the width and height of the viewport while
      *          ensuring it remains inside the map boundaries.
+     * @note We want our viewport to be as big as possible to get an overall view of the map
      * @param map Reference to the map
-     * @param w New width in pixels
-     * @param h New height in pixels
+     * @param screenWidth Screen width in pixels size
+     * @param screenWidth Screen height in pixels size
      */
-    void setSize(const Map &map, float w, float h);
-
-    /**
-     * @brief Set the viewport position
-     * @details Moves the viewport to the specified coordinates,
-     *          clamped within the map limits.
-     * @param map Reference to the map
-     * @param x New x coordinate
-     * @param y New y coordinate
-     */
-    void setCoordinates(const Map &map, float x, float y);
+    void setSize(const Map &map, float screenWidth, float screenHeight);
 
 
     /**

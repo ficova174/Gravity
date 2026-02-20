@@ -33,10 +33,8 @@ Simulation::Simulation(const char* appName, const char* creatorName, int initial
     Particle::setSharedTexture(m_renderer);
 
     m_viewport.setSize(m_map, screenWidth, screenHeight);
-    m_viewport.setCoordinates(m_map, m_map.getWidth() / 2.0f, m_map.getHeight() / 2.0f);
 
     m_particles.reserve(initialNBParticles);
-
     spawnParticles(initialNBParticles);
 }
 
@@ -164,7 +162,7 @@ void Simulation::handleEvents(SDL_Event &event, bool &running) {
 
 void Simulation::handleZoom(SDL_Event &event) {
     float viewportChangeX{event.wheel.y * m_viewport.getZoomSpeed()};
-    float viewportChangeY{viewportChangeX / aspectRatio};
+    float viewportChangeY{viewportChangeX / screenRatio};
 
     m_viewport.zoom(m_map, viewportChangeX, viewportChangeY);
 }

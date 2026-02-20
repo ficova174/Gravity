@@ -65,5 +65,5 @@ private:
     static constexpr float targetFPS{120.0f};
     static constexpr float screenHeight{800.0f};
     static constexpr float screenWidth{1200.0f};
-    static constexpr float aspectRatio{screenWidth/screenHeight};
+    static constexpr float screenRatio{screenWidth/screenHeight};
 };

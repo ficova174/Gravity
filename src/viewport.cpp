@@ -5,23 +5,22 @@
 #include "viewportErrors.h"
 #include "map.h"
 
+void Viewport::setSize(const Map &map, float screenWidth, float screenHeight) {
+    float aspectRatio{screenWidth / screenHeight};
 
-void Viewport::setSize(const Map &map, float w, float h) {
-    // Warning : no clamping done !
-    m_viewport.w = w;
-    m_viewport.h = h;
-    
-    if ((m_viewport.w > map.getWidth()) || (m_viewport.h > map.getHeight())) {
-        throw ViewportError("Error: viewport size is bigger than map size");
+    // Ideally we want the viewport width equal to map.getWidth()
+    float idealHeight{map.getWidth() / aspectRatio};
+
+    // Fortunately the map is high enough to respect our viewport aspect ratio
+    if (idealHeight < map.getHeight()) {
+        m_viewport.w = map.getWidth();
+        m_viewport.h = idealHeight;
     }
-}
-
-void Viewport::setCoordinates(const Map &map, float x, float y) {
-    m_viewport.x = x;
-    m_viewport.y = y;
-
-    m_viewport.x = std::clamp(m_viewport.x, 0.0f, map.getWidth() - m_viewport.w);
-    m_viewport.y = std::clamp(m_viewport.y, 0.0f, map.getHeight() - m_viewport.h);
+    else {
+        float widthOfShame{map.getHeight() * aspectRatio};
+        m_viewport.w = widthOfShame;
+        m_viewport.h = map.getHeight();
+    }
 }
 
 void Viewport::zoom(const Map &map, const float changex, const float changey) {
