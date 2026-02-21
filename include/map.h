@@ -11,22 +11,25 @@
  */
 class Map {
 public:
+    Map(int nbColumns, int nbRows, int size) : m_nbColumns(static_cast<float>(nbColumns)),
+                                               m_nbRows(static_cast<float>(nbRows)),
+                                               m_size(static_cast<float>(size)) {}
     ~Map() {SDL_DestroyTexture(m_texture);}
 
     /**
      * @brief Get the width of the map
      * @return Map width in pixels
      */
-    float getWidth() const {return m_w;}
+    float getWidth() const {return m_nbColumns * m_size;}
 
     /**
      * @brief Get the height of the map
      * @return Map height in pixels
      */
-    float getHeight() const {return m_h;}
+    float getHeight() const {return m_nbRows * m_size;}
 
     /**
-     * @brief Load and set the texture for the map
+     * @brief Set the texture for the map
      * @param renderer SDL_Renderer to render to
      */
     void setTexture(SDL_Renderer* renderer);
@@ -40,16 +43,13 @@ public:
     void render(SDL_Renderer* renderer, const SDL_FRect gameViewport);
 
 private:
-    /**
-     * @brief Create a surface representing the map that will be loaded as a texture
-     * @see Map::setTexture
-     */
-    SDL_Surface* setSurface();
-
     /// SDL texture representing the map
     SDL_Texture* m_texture{nullptr};
 
     /// Map dimensions in pixels
-    float m_w;
-    float m_h;
+    float m_nbColumns;
+    float m_nbRows;
+
+    /// Map square size in pixels
+    float m_size;
 };

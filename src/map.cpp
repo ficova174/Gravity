@@ -4,73 +4,36 @@
 #include "mapErrors.h"
 
 void Map::setTexture(SDL_Renderer* renderer) {
-    SDL_Surface* scaledSurface{setSurface()};
-    m_texture = SDL_CreateTextureFromSurface(renderer, scaledSurface);
-
+    m_texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, static_cast<int>(m_nbColumns * m_size), static_cast<int>(m_nbRows * m_size));
+    
     if (!m_texture) {
-        SDL_DestroySurface(scaledSurface);
-        throw MapError("Creating Texture from map of scaled pixel surface failed: ", SDL_GetError());
+        throw MapError("Map texture creation failed: ", SDL_GetError());
     }
 
-    SDL_DestroySurface(scaledSurface);
-
-    if (!SDL_GetTextureSize(m_texture, &m_w, &m_h)) {
-        throw MapError("Getting the map texture size failed: ", SDL_GetError());
-    }
-}
-
-SDL_Surface* Map::setSurface() {
-    constexpr int nbRows{300};
-    constexpr int nbColumns{300};
-    constexpr int size{50};
-
-    SDL_Surface* surface{SDL_CreateSurface(nbColumns, nbRows, SDL_PIXELFORMAT_RGBA8888)};
-
-    if (!surface) {
-        throw MapError("Map pixel surface creation failed: ", SDL_GetError());
+    if(!SDL_SetRenderTarget(renderer, m_texture)) {
+        throw MapError("Setting the render target for map texture creation failed: ", SDL_GetError());
     }
 
-    if (!SDL_LockSurface(surface)) {
-        SDL_DestroySurface(surface);
-        throw MapError("Locking up map pixel surface failed: ", SDL_GetError());
-    }
-
-    Uint8 r1{50}, g1{50}, b1{50}, a1{50};
-    Uint8 r2{150}, g2{150}, b2{150}, a2{150};
-
-    bool isEvenRow, isEvenColumn;
-    for (int i = 0; i < nbRows; ++i) {
-        for (int j = 0; j < nbColumns; ++j) {
-            isEvenRow = ((i & 1) == 0);
-            isEvenColumn = ((j & 1) == 0);
-
-            if ((isEvenRow && isEvenColumn) || (!isEvenRow && !isEvenColumn)) {
-                if (!SDL_WriteSurfacePixel(surface, j, i, r1, g1, b1, a1)) {
-                    SDL_DestroySurface(surface);
-                    throw MapError("Writing pixel on map pixel surface case 1 failed: ", SDL_GetError());
-                }
+    for (int col = 0; col < m_nbColumns; ++col) {
+        for (int row = 0; row < m_nbRows; ++row) {
+            bool isColored{(col + row) % 2 == 0};
+            int rgba{isColored ? 50 : 150};
+            
+            if (!SDL_SetRenderDrawColor(renderer, rgba, rgba, rgba, 255)) {
+                throw MapError("Setting the render draw color for map texture creation failed: ", SDL_GetError());
             }
-            else {
-                if (!SDL_WriteSurfacePixel(surface, j, i, r2, g2, b2, a2)) {
-                    SDL_DestroySurface(surface);
-                    throw MapError("Writing pixel on map pixel surface case 2 failed: ", SDL_GetError());
-                }
+
+            const SDL_FRect rect{col * m_size, row * m_size, m_size, m_size};
+
+            if (!SDL_RenderFillRect(renderer, &rect)) {
+                throw MapError("Filling a square for map texture creation failed: ", SDL_GetError());
             }
         }
     }
 
-    SDL_UnlockSurface(surface);
-
-    SDL_Surface* scaledSurface = SDL_ScaleSurface(surface, nbColumns*size, nbRows*size, SDL_SCALEMODE_PIXELART);
-
-    if (!scaledSurface) {
-        SDL_DestroySurface(surface);
-        throw MapError("Scaling the map pixel surface failed: ", SDL_GetError());
+    if (!SDL_SetRenderTarget(renderer, nullptr)) {
+        throw MapError("Setting the render target back to the screen during map creation failed: ", SDL_GetError());
     }
-
-    SDL_DestroySurface(surface);
-
-    return scaledSurface;
 }
 
 void Map::render(SDL_Renderer *renderer, const SDL_FRect gameViewport) {

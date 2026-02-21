@@ -12,7 +12,7 @@
 #include "viewport.h"
 #include "particle.h"
 
-Simulation::Simulation(const char* appName, const char* creatorName) : m_map(), m_viewport() {
+Simulation::Simulation(const char* appName, const char* creatorName) : m_map(300, 300, 50), m_viewport() {
     if (!SDL_SetAppMetadata(appName, nullptr, nullptr)) {
         throw SimulationError("Setting up the app metadata failed: ", SDL_GetError());
     }
@@ -116,10 +116,20 @@ void Simulation::spawnParticles(int nbParticles) {
 
             float minX{particle.getParticle().w};
             float maxX{m_map.getWidth() - particle.getParticle().w};
+
+            if (minX >= maxX) {
+                throw SimulationError("Map is too small so the particle don't fit in it");
+            }
+
             float x{randomCoordinate(minX, maxX)};
 
             float minY{particle.getParticle().h};
             float maxY{m_map.getHeight() - particle.getParticle().h};
+
+            if (minY >= maxY) {
+                throw SimulationError("Map is too small so the particle don't fit in it");
+            }
+
             float y{randomCoordinate(minY, maxY)};
 
             particle.setCoordinates(m_map, x, y);

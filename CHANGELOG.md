@@ -5,6 +5,19 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [0.6.1] - 2026-02-20
+### Added
+- Debugging folder with a timer utility in order to measure time for some part of the code to execute
+
+### Changed
+- Modified the map class, now nbColumns, nbRows and size are given in the simulation and map constructor.
+- Map texture initialisation doesn't use surfaces anymore, it is clearer and faster (0.86 sec -> 0.26 sec)
+
+### Fixed
+- New exception if a particle is bigger than the map
+
+---
+
 ## [0.6.0] - 2026-02-20
 ### Added
 - Added Dear ImGui files

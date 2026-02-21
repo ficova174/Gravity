@@ -39,6 +39,7 @@ target_include_directories(Gravity PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/third_party
     ${CMAKE_CURRENT_SOURCE_DIR}/third_party/imgui
     ${CMAKE_CURRENT_SOURCE_DIR}/third_party/imgui/backends
+    ${CMAKE_CURRENT_SOURCE_DIR}/debugging
 )
 
 target_link_libraries(Gravity PRIVATE
