@@ -32,14 +32,12 @@ public:
 
     /**
      * @brief Spawn or destroy particles onto the map
-     * @details Particles are spawned randomly without overlapping
+     * @details Particles are spawned randomly
      *          They are destroyed if the nbParticlesWanted is lower than the actual number of particles
      *          Generate a random mass
      *          Generate the Particle
      *          Generate random coordinates on the map (minus the sides, after genererating the particle we know its radius)
-     *          Check for collision with other particles (naive approach)
-     *          If collision then generate other coordinates until it works
-     * @warning The map needs to have enough blank space!
+     *          Check for collision with other particles
      * @param nbParticlesWanted Number of particles we want
      */
     void spawnDestroyParticles(int nbParticlesWanted);

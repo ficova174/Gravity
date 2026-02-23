@@ -12,7 +12,7 @@
 #include "viewport.h"
 #include "particle.h"
 
-Simulation::Simulation(const char* appName, const char* creatorName) : m_map(300, 300, 50), m_viewport() {
+Simulation::Simulation(const char* appName, const char* creatorName) : m_map(50, 50), m_viewport() {
     if (!SDL_SetAppMetadata(appName, nullptr, nullptr)) {
         throw SimulationError("Setting up the app metadata failed: ", SDL_GetError());
     }
@@ -85,7 +85,7 @@ void Simulation::spawnParticles(int nbParticles) {
     int maxMass{static_cast<int>(0.1f * Particle::sharedParticleMass)};
     std::uniform_int_distribution<int> distMass(minMass, maxMass);
 
-    float maxSpeed{5000.0f};
+    float maxSpeed{500.0f};
     std::uniform_real_distribution<float> distSpeed(0.0f, maxSpeed);
     std::uniform_real_distribution<float> distAngle(0.0f, 2.0f * M_PI);
 
@@ -97,62 +97,29 @@ void Simulation::spawnParticles(int nbParticles) {
     for (int i = 0; i < nbParticles; ++i) {
         int mass{distMass(gen)};
         Eigen::Vector2f velocity{distSpeed(gen) * std::cos(distAngle(gen)),
-                                 distSpeed(gen) * std::sin(distAngle(gen))};
+                                 distSpeed(gen) * std::sin(distAngle(gen))
+        };
 
         m_particles.emplace_back(mass, velocity);
         Particle& particle{m_particles.back()};
 
-        bool collision{false};
-        int counter{0};
-        do {
-            // We want the particle to be in the map
-            // We know the particle's radius
-            
-            ++counter;
-            constexpr int nbTimesToTry{3};
-            if (counter > nbTimesToTry * nbParticles) {
-                throw SimulationError("When initialising there is not enough place to put the particles onto the map");
-            }
+        // We want the particle to be in the map
+        // We know the particle's radius
 
-            float minX{particle.getParticle().w};
-            float maxX{m_map.getWidth() - particle.getParticle().w};
+        float minX{particle.getParticle().w};
+        float maxX{m_map.getParticlesRect().w - particle.getParticle().w};
 
-            if (minX >= maxX) {
-                throw SimulationError("Map is too small so the particle don't fit in it");
-            }
+        float minY{particle.getParticle().h};
+        float maxY{m_map.getParticlesRect().h - particle.getParticle().h};
 
-            float x{randomCoordinate(minX, maxX)};
-
-            float minY{particle.getParticle().h};
-            float maxY{m_map.getHeight() - particle.getParticle().h};
-
-            if (minY >= maxY) {
-                throw SimulationError("Map is too small so the particle don't fit in it");
-            }
-
-            float y{randomCoordinate(minY, maxY)};
-
-            particle.setCoordinates(m_map, x, y);
-
-            if (m_particles.size() == 1) {
-                collision = false;
-                break;
-            }
-
-            // We need to put the collision back to false!
-            collision = false;
-            for (Particle& otherParticle : m_particles) {
-                if (&particle == &otherParticle) {
-                    continue;
-                }
-
-                if (particle.checkCollisionInit(otherParticle)) {
-                    collision = true;
-                    break;
-                }
-            }
+        if ((minX >= maxX) || (minY >= maxY)) {
+            throw SimulationError("Map is too small so the particle don't fit in it");
         }
-        while (collision);
+
+        float x{randomCoordinate(minX, maxX)};
+        float y{randomCoordinate(minY, maxY)};
+
+        particle.setCoordinates(m_map, x, y);
     }
 }
 
@@ -277,13 +244,13 @@ void Simulation::myImGuiWindow() {
     ImGui::Text("Simulation average %.3f ms/frame (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);
 
     // Nb particles simulation
-    if (ImGui::Button("-") && (nbParticlesWantedSim > 0)) {
+    if (ImGui::Button("-##Decrease number of particles") && (nbParticlesWantedSim > 0)) {
         --nbParticlesWantedSim;
     }
     ImGui::SameLine();
     ImGui::SliderInt("##nbParticles slider", &nbParticlesWantedSim, 0, maxNBParticlesSim);
     ImGui::SameLine();
-    if (ImGui::Button("+") && (nbParticlesWantedSim < maxNBParticlesSim)) {
+    if (ImGui::Button("+##Increase number of particles") && (nbParticlesWantedSim < maxNBParticlesSim)) {
         ++nbParticlesWantedSim;
     }
     ImGui::SameLine();
@@ -292,6 +259,37 @@ void Simulation::myImGuiWindow() {
     spawnDestroyParticles(nbParticlesWantedSim);
 
     ImGui::Text("Total kinetic energy (MJ) : %.3f", getTotalKineticEnergy() / 1e6);
+
+    // Map Size
+    if (ImGui::Button("-##Decrease number of columns") && (m_map.getNBColumns() > 1)) {
+        m_map.setNBColumns(m_renderer, m_map.getNBColumns() - 1);
+        if (m_map.getWidth() < m_viewport.getWidth()) {
+            m_viewport.setSize(m_map, screenWidth, screenHeight);
+        }
+    }
+    ImGui::SameLine();
+    ImGui::Text("%d", m_map.getNBColumns());
+    ImGui::SameLine();
+    if (ImGui::Button("+##Increase number of columns") && (m_map.getNBColumns() < 1000)) {
+        m_map.setNBColumns(m_renderer, m_map.getNBColumns() + 1);
+    }
+    ImGui::SameLine();
+    ImGui::Text("Columns");
+
+    if (ImGui::Button("-##Decrease number of rows") && (m_map.getNBRows() > 1)) {
+        m_map.setNBRows(m_renderer, m_map.getNBRows() - 1);
+        if (m_map.getWidth() < m_viewport.getWidth()) {
+            m_viewport.setSize(m_map, screenWidth, screenHeight);
+        }
+    }
+    ImGui::SameLine();
+    ImGui::Text("%d", m_map.getNBRows());
+    ImGui::SameLine();
+    if (ImGui::Button("+##Increase number of rows") && (m_map.getNBRows() < 1001)) {
+        m_map.setNBRows(m_renderer, m_map.getNBRows() + 1);
+    }
+    ImGui::SameLine();
+    ImGui::Text("Rows");
 
     ImGui::End();
 }

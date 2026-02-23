@@ -16,6 +16,12 @@
 class Viewport {
 public:
     /**
+     * @brief Get the width of the viewport in pixels
+     * @return int representing the width of the viewport in pixels
+     */
+    int getWidth() const {return m_viewport.w;}
+
+    /**
      * @brief Get the zoom speed factor
      * @return Zoom speed value
      */

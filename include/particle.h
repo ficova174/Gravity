@@ -64,15 +64,6 @@ public:
 
 
     /**
-     * @brief Check collision with another particle during particle instanciation
-     * @warning Can't be used before solveCollisionParticle as it uses the squared distance
-     * @param otherParticle References particle to check for collision
-     * @return True if collision else False
-     * @see Simulation::spawnParticles
-     */
-    bool checkCollisionInit(const Particle& otherParticle);
-
-    /**
      * @brief Move the particle based on its velocity and deltaTime
      * @details Wall and particle collisions are checked AFTER moving
      * @param deltaTime Time elapsed since last frame

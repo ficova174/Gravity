@@ -5,6 +5,19 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [0.7.0] - 2026-02-23
+### Added
+- Buttons for adding/removing columns/rows of the map
+
+### Changed
+- Particles are not initialised by checking for collisions, they are spawned and collision is treated in the next frame
+- Map class changed a bit, now we are giving nbColumns and nbRows in the constructor and we can change the map size on the fly
+- Map is now a grid with borders
+- Map class has a rectangle for the viewport and one for the particles, consequently the other classes changed according to the new viewports
+- Getter added to the viewport class in case the map gets smaller than the viewport when changin the size
+
+---
+
 ## [0.6.1] - 2026-02-20
 ### Added
 - Debugging folder with a timer utility in order to measure time for some part of the code to execute

@@ -9,24 +9,24 @@
 void Viewport::setSize(const Map &map, float screenWidth, float screenHeight) {
     float aspectRatio{screenWidth / screenHeight};
 
-    // Ideally we want the viewport width equal to map.getWidth()
-    float idealHeight{map.getWidth() / aspectRatio};
+    // Ideally we want the viewport width equal to map.getViewportRect().w
+    float idealHeight{map.getViewportRect().w / aspectRatio};
 
     // Fortunately the map is high enough to respect our viewport aspect ratio
-    if (idealHeight < map.getHeight()) {
-        m_viewport.w = map.getWidth();
+    if (idealHeight < map.getViewportRect().h) {
+        m_viewport.w = map.getViewportRect().w;
         m_viewport.h = idealHeight;
     }
     else {
-        float widthOfShame{map.getHeight() * aspectRatio};
+        float widthOfShame{map.getViewportRect().h * aspectRatio};
         m_viewport.w = widthOfShame;
-        m_viewport.h = map.getHeight();
+        m_viewport.h = map.getViewportRect().h;
     }
 }
 
 void Viewport::zoom(const Map &map, const float changex, const float changey) {
-    const float mapWidth = map.getWidth();
-    const float mapHeight = map.getHeight();
+    const float mapWidth = map.getViewportRect().w;
+    const float mapHeight = map.getViewportRect().h;
 
     // 500 is arbitrary and represents min height
     bool lessMinHeight{(m_viewport.h + changey < 500.0f)};
@@ -68,6 +68,6 @@ void Viewport::move(const Map &map, const bool *keys, const float deltaTime) {
         }
     }
 
-    m_viewport.x = std::clamp(m_viewport.x, 0.0f, map.getWidth() - m_viewport.w);
-    m_viewport.y = std::clamp(m_viewport.y, 0.0f, map.getHeight() - m_viewport.h);
+    m_viewport.x = std::clamp(m_viewport.x, 0.0f, map.getViewportRect().w - m_viewport.w);
+    m_viewport.y = std::clamp(m_viewport.y, 0.0f, map.getViewportRect().h - m_viewport.h);
 }

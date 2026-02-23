@@ -11,28 +11,66 @@
  */
 class Map {
 public:
-    Map(int nbColumns, int nbRows, int size) : m_nbColumns(static_cast<float>(nbColumns)),
-                                               m_nbRows(static_cast<float>(nbRows)),
-                                               m_size(static_cast<float>(size)) {}
+    Map(int nbColumns, int nbRows) : m_nbColumns(nbColumns), m_nbRows(nbRows) {}
     ~Map() {SDL_DestroyTexture(m_texture);}
 
-    /**
-     * @brief Get the width of the map
-     * @return Map width in pixels
-     */
-    float getWidth() const {return m_nbColumns * m_size;}
 
     /**
-     * @brief Get the height of the map
-     * @return Map height in pixels
+     * @brief Get the number of columns of the map
+     * @return int representing the number of columns of the map
      */
-    float getHeight() const {return m_nbRows * m_size;}
+    int getNBColumns() const {return m_nbColumns;}
+
+    /**
+     * @brief Get the number of rows of the map
+     * @return int representing the number of rows of the map
+     */
+    int getNBRows() const {return m_nbRows;}
+
+    /**
+     * @brief Get the width of the map in pixels
+     * @return int representing the width of the map in pixels
+     */
+    int getWidth() const {return m_nbColumns * m_sizeSquare;}
+
+    /**
+     * @brief Get the rectangle used by the viewport
+     * @return SDL_FRect representing the whole map
+     */
+    SDL_FRect getViewportRect() const {return m_viewportRect;}
+
+    /**
+     * @brief Get the rectangle used by the particles
+     * @return SDL_FRect representing the map without the corners
+     */
+    SDL_FRect getParticlesRect() const {return m_particlesRect;}
 
     /**
      * @brief Set the texture for the map
+     * @details Set the texture for the map AND the viewport/particles rectangles
      * @param renderer SDL_Renderer to render to
      */
     void setTexture(SDL_Renderer* renderer);
+
+    /**
+     * @brief Set the number of columns of the map
+     * @param renderer SDL_Renderer to render to
+     * @param nbColumns Number of columns we want our map to be
+     */
+    void setNBColumns(SDL_Renderer* renderer, int nbColumns) {
+        m_nbColumns = nbColumns;
+        setTexture(renderer);
+    }
+
+    /**
+     * @brief Set the number of rows of the map
+     * @param renderer SDL_Renderer to render to
+     * @param nbRows Number of rows we want our map to be
+     */
+    void setNBRows(SDL_Renderer* renderer, int nbRows) {
+        m_nbRows = nbRows;
+        setTexture(renderer);
+    }
 
 
     /**
@@ -46,10 +84,16 @@ private:
     /// SDL texture representing the map
     SDL_Texture* m_texture{nullptr};
 
-    /// Map dimensions in pixels
-    float m_nbColumns;
-    float m_nbRows;
+    /// Map from the point of view of the viewport or particles
+    SDL_FRect m_viewportRect;
+    SDL_FRect m_particlesRect;
 
-    /// Map square size in pixels
-    float m_size;
+    /// Map dimensions in pixels
+    int m_nbColumns;
+    int m_nbRows;
+
+    const int m_sizeSquare{50};
+    const int m_sizeSeparator{3};
+
+    int m_borderSize{5 * m_sizeSquare};
 };
